@@ -9,13 +9,20 @@ const { findBackupByTime, restoreBackup } = require("../workers/restoreWorker");
 router.post("/run", async (req, res) => {
   const { source, destination } = req.body;
 
+  console.log("Run Backup API called");
+  console.log("Source:", source);
+  console.log("Destination:", destination);
+
   try {
     await runBackup(source, destination);
-    res.json({ message: "Backup started" });
+    console.log("Backup completed");
+    res.json({ message: "Backup completed" });
   } catch (err) {
+    console.error("Backup error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 router.post("/restore", async (req, res) => {

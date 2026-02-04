@@ -2,10 +2,6 @@
 <html>
 <head>
   <title>Backup System Dashboard</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    input, button { margin: 5px; padding: 5px; }
-  </style>
 </head>
 <body>
   <h2>Backup System Dashboard</h2>
@@ -22,23 +18,29 @@
 
   <h3>Backup History</h3>
   <button onclick="loadBackups()">Load Backups</button>
+
   <pre id="output"></pre>
 
   <script>
     async function runBackup() {
-      const source = document.getElementById("source").value;
-      const dest = document.getElementById("dest").value;
+  const source = document.getElementById("source").value;
+  const dest = document.getElementById("dest").value;
 
-      const res = await fetch("/api/backups/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source, destination: dest })
-      });
+  const res = await fetch("/api/backups/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ source, destination: dest })
+  });
 
-      document.getElementById("output").textContent = await res.text();
-    }
+  const data = await res.json();
+  document.getElementById("output").textContent =
+    JSON.stringify(data, null, 2);
+}
+
 
     async function restoreBackup() {
+      console.log("Restore clicked");
+
       const timestamp = document.getElementById("time").value;
       const restorePath = document.getElementById("restorePath").value;
 
@@ -53,9 +55,12 @@
     }
 
     async function loadBackups() {
+      console.log("Load backups clicked");
+
       const res = await fetch("/api/backups");
       const data = await res.json();
-      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      document.getElementById("output").textContent =
+        JSON.stringify(data, null, 2);
     }
   </script>
 </body>
