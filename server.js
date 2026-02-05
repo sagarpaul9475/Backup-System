@@ -3,7 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
 
-//require("./scheduler");
+require("./scheduler");
 
 const backupRoutes = require("./routes/backupRoutes");
 
