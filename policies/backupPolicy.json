@@ -1,0 +1,15 @@
+{
+  "backup": {
+    "frequency": "Every 1 minute",
+    "sourcePath": "C:/Users/Sagar Paul/Documents/data",
+    "destinationPath": "C:/Users/Sagar Paul/Documents/backups"
+  },
+  "retention": {
+    "keepDays": 3
+  },
+  "security": {
+    "encryption": "AES-256 (OpenSSL)",
+    "compression": "tar.gz",
+    "checksum": "SHA-256"
+  }
+}
