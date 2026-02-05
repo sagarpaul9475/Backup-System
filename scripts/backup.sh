@@ -17,4 +17,8 @@ sha256sum "$ENCRYPTED" > "$ENCRYPTED.sha256"
 
 rm "$ARCHIVE"
 
+# 🔐 Secure permissions
+chmod 600 "$ENCRYPTED"
+chmod 600 "$ENCRYPTED.sha256"
+
 echo "$ENCRYPTED"

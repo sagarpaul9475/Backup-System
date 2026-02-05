@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Backup System Dashboard</title>
+</head>
+<body>
+  <h2>Backup System Dashboard</h2>
+
+  <h3>Run Backup</h3>
+  <input id="source" placeholder="Source Path" size="50">
+  <input id="dest" placeholder="Destination Path" size="50">
+  <button onclick="runBackup()">Run Backup</button>
+
+  <h3>Restore Backup</h3>
+  <input id="time" placeholder="Timestamp (ISO format)" size="40">
+  <input id="restorePath" placeholder="Restore Path" size="50">
+  <button onclick="restoreBackup()">Restore</button>
+
+  <h3>Backup History</h3>
+  <button onclick="loadBackups()">Load Backups</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    async function runBackup() {
+  const source = document.getElementById("source").value;
+  const dest = document.getElementById("dest").value;
+
+  const res = await fetch("/api/backups/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ source, destination: dest })
+  });
+
+  const data = await res.json();
+  document.getElementById("output").textContent =
+    JSON.stringify(data, null, 2);
+}
+
+
+    async function restoreBackup() {
+      console.log("Restore clicked");
+
+      const timestamp = document.getElementById("time").value;
+      const restorePath = document.getElementById("restorePath").value;
+
+      const res = await fetch("/api/backups/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timestamp, restorePath })
+      });
+
+      const text = await res.text();
+      document.getElementById("output").textContent = text;
+    }
+
+    async function loadBackups() {
+      console.log("Load backups clicked");
+
+      const res = await fetch("/api/backups");
+      const data = await res.json();
+      document.getElementById("output").textContent =
+        JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
+

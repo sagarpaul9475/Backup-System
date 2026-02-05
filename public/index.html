@@ -1,67 +1,182 @@
 <!DOCTYPE html>
+
 <html>
 <head>
   <title>Backup System Dashboard</title>
-</head>
-<body>
-  <h2>Backup System Dashboard</h2>
-
-  <h3>Run Backup</h3>
-  <input id="source" placeholder="Source Path" size="50">
-  <input id="dest" placeholder="Destination Path" size="50">
-  <button onclick="runBackup()">Run Backup</button>
-
-  <h3>Restore Backup</h3>
-  <input id="time" placeholder="Timestamp (ISO format)" size="40">
-  <input id="restorePath" placeholder="Restore Path" size="50">
-  <button onclick="restoreBackup()">Restore</button>
-
-  <h3>Backup History</h3>
-  <button onclick="loadBackups()">Load Backups</button>
-
-  <pre id="output"></pre>
-
-  <script>
-    async function runBackup() {
-  const source = document.getElementById("source").value;
-  const dest = document.getElementById("dest").value;
-
-  const res = await fetch("/api/backups/run", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ source, destination: dest })
-  });
-
-  const data = await res.json();
-  document.getElementById("output").textContent =
-    JSON.stringify(data, null, 2);
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background:#f4f6f8;
+      margin:0;
+      padding:0;
+    }
+header {
+  background:#1f2937;
+  color:white;
+  padding:15px 25px;
+  font-size:22px;
+  font-weight:bold;
 }
 
+.container {
+  padding:20px;
+  max-width:1100px;
+  margin:auto;
+}
 
-    async function restoreBackup() {
-      console.log("Restore clicked");
+.card {
+  background:white;
+  padding:20px;
+  margin-bottom:20px;
+  border-radius:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
 
-      const timestamp = document.getElementById("time").value;
-      const restorePath = document.getElementById("restorePath").value;
+input {
+  padding:8px;
+  margin:5px;
+  width:260px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
 
-      const res = await fetch("/api/backups/restore", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timestamp, restorePath })
-      });
+button {
+  padding:8px 15px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:bold;
+}
 
-      const text = await res.text();
-      document.getElementById("output").textContent = text;
-    }
+button:hover {
+  background:#1e40af;
+}
 
-    async function loadBackups() {
-      console.log("Load backups clicked");
+#status {
+  margin-top:10px;
+  font-weight:bold;
+}
 
-      const res = await fetch("/api/backups");
-      const data = await res.json();
-      document.getElementById("output").textContent =
-        JSON.stringify(data, null, 2);
-    }
-  </script>
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+
+th, td {
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  text-align:left;
+}
+
+th {
+  background:#f3f4f6;
+}
+
+  </style>
+</head>
+
+<body>
+
+<header>
+ Secure Distributed Backup Dashboard
+</header>
+
+<div class="container">
+
+  <!-- Run Backup -->
+
+  <div class="card">
+    <h3>Run Backup</h3>
+    <input id="src" placeholder="Source Path"/>
+    <input id="dest" placeholder="Destination Path"/>
+    <button onclick="runBackup()">Run</button>
+  </div>
+
+  <!-- Restore -->
+
+  <div class="card">
+    <h3>Restore Backup</h3>
+    <input id="time" placeholder="Timestamp"/>
+    <input id="restorePath" placeholder="Restore Path"/>
+    <button onclick="restore()">Restore</button>
+  </div>
+
+  <!-- History -->
+
+  <div class="card">
+    <h3>Backup History</h3>
+    <button onclick="load()">Load Backups</button>
+    <table id="table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Status</th>
+          <th>Checksum</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="status"></div>
+
+</div>
+
+<script>
+const API="http://localhost:3000/api/backups"
+
+function notify(msg,color="green"){
+  const s=document.getElementById("status")
+  s.style.color=color
+  s.innerText=msg
+}
+
+async function runBackup(){
+  notify("Running backup...")
+  const res=await fetch(API+"/run",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      source:src.value,
+      destination:dest.value
+    })
+  })
+  notify("Backup Triggered ✔")
+}
+
+async function restore(){
+  notify("Restoring...")
+  const res=await fetch(API+"/restore",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      timestamp: time.value,
+      restorePath: restorePath.value
+    })
+  })
+  const j=await res.json()
+  notify(j.message)
+}
+
+async function load(){
+  const res=await fetch(API)
+  const data=await res.json()
+  const body=document.querySelector("#table tbody")
+  body.innerHTML=""
+
+  data.forEach(b=>{
+    body.innerHTML+=`
+      <tr>
+        <td>${new Date(b.timestamp).toLocaleString()}</td>
+        <td>${b.status}</td>
+        <td>${b.checksum?.substring(0,12) || "-"}</td>
+      </tr>`
+  })
+}
+</script>
+
 </body>
 </html>

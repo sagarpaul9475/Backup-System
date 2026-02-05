@@ -11,6 +11,9 @@ openssl enc -d -aes-256-cbc -in "$BACKUP_FILE" -out "$DECRYPTED" -k "mysecretkey
 
 tar -xzf "$DECRYPTED" -C "$RESTORE_DIR"
 
+# 🔐 Lock restored files
+chmod -R 700 "$RESTORE_DIR"
+
 rm "$DECRYPTED"
 
 echo "RESTORE_DONE"
