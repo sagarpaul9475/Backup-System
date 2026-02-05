@@ -40,17 +40,22 @@ router.post("/restore", async (req, res) => {
   try {
     await restoreBackup(
       backupToRestore.destinationPath,
-      restorePath
+      restorePath,
+      backupToRestore.checksum
     );
 
     res.json({
-      message: "Restore completed",
+      message: "Restore completed with checksum verification",
       backup: backupToRestore
     });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({
+      error: err.message
+    });
   }
 });
+
 
 // list backups
 router.get("/", async (req, res) => {

@@ -1,5 +1,7 @@
 const path = require("path");
 const { exec } = require("child_process");
+const fs = require("fs");
+const crypto = require("crypto");
 
 function toBashPath(winPath) {
   return winPath
@@ -7,27 +9,45 @@ function toBashPath(winPath) {
     .replace(/^([A-Za-z]):/, (_, d) => `/${d.toLowerCase()}`);
 }
 
-function restoreBackup(backupPath, restoreDir) {
+// 🔐 Verify checksum
+function calculateChecksum(filePath) {
   return new Promise((resolve, reject) => {
-    const scriptPath = path.resolve(__dirname, "../scripts/restore.sh");
+    const hash = crypto.createHash("sha256");
+    const stream = fs.createReadStream(filePath);
 
-    const bashScript = toBashPath(scriptPath);
-    const bashBackup = toBashPath(backupPath);
-    const bashRestore = toBashPath(restoreDir);
-
-    const cmd = `bash "${bashScript}" "${bashBackup}" "${bashRestore}"`;
-
-    exec(cmd, (err, stdout, stderr) => {
-    console.log("Restore CMD:", cmd);
-    console.log("STDOUT:", stdout);
-    console.log("STDERR:", stderr);
-
-    if (err) {
-      return reject(err);
-    }
-
-    resolve(stdout.trim());
+    stream.on("data", chunk => hash.update(chunk));
+    stream.on("end", () => resolve(hash.digest("hex")));
+    stream.on("error", err => reject(err));
   });
+}
+
+function restoreBackup(backupPath, restoreDir, storedChecksum) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const actualChecksum = await calculateChecksum(backupPath);
+
+      if (actualChecksum !== storedChecksum) {
+        return reject(new Error("Checksum mismatch! Backup may be corrupted."));
+      }
+
+      const scriptPath = path.resolve(__dirname, "../scripts/restore.sh");
+
+      const bashScript = toBashPath(scriptPath);
+      const bashBackup = toBashPath(backupPath);
+      const bashRestore = toBashPath(restoreDir);
+
+      const cmd = `bash "${bashScript}" "${bashBackup}" "${bashRestore}"`;
+
+      exec(cmd, (err, stdout, stderr) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(stdout.trim());
+      });
+
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
